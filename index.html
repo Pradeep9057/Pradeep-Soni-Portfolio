@@ -85,6 +85,7 @@ nav{
   padding:1.1rem 5%;display:flex;align-items:center;justify-content:space-between;
   transition:background .4s,backdrop-filter .4s,border-color .4s;
   border-bottom:1px solid transparent;
+  isolation:isolate;
 }
 nav.scrolled{background:rgba(3,7,15,.88);backdrop-filter:blur(24px);border-color:var(--border);}
 .nav-logo{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:var(--white);letter-spacing:-.03em;display:flex;align-items:center;gap:.25rem;}
@@ -108,12 +109,10 @@ nav.scrolled{background:rgba(3,7,15,.88);backdrop-filter:blur(24px);border-color
 .mob-menu{
   display:none;visibility:hidden;pointer-events:none;position:fixed;inset:0;z-index:199;
   background:rgba(3,7,15,.97);backdrop-filter:blur(30px);
-  flex-direction:column;align-items:center;justify-content:center;gap:2rem;
 }
-.mob-menu.open{display:flex;visibility:visible;pointer-events:auto;}
-.mob-menu a{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:700;color:var(--text2);transition:color .3s;}
-.mob-menu a:hover{color:var(--cyan);}
-.mob-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:var(--text2);font-size:1.5rem;}
+.mob-menu.open{display:block;visibility:visible;pointer-events:auto;}
+.mob-close{position:absolute;top:1.5rem;right:1.5rem;z-index:210;background:none;border:none;color:var(--text2);font-size:1.5rem;cursor:pointer;}
+.nav-only-mobile{display:none;}
 
 /* ============================================================
    SECTIONS
@@ -455,7 +454,38 @@ footer{position:relative;z-index:2;background:var(--bg);border-top:1px solid var
   .about-card{display:none;}
   .contact-grid{grid-template-columns:1fr;}
   .form-row{grid-template-columns:1fr;}
+  .nav-only-mobile{display:list-item;}
   .nav-links,.nav-actions{display:none!important;}
+  nav.nav-open .nav-links{
+    display:flex!important;
+    position:fixed;
+    left:0;right:0;top:0;bottom:0;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(1rem,4vh,2rem);
+    z-index:205;
+    margin:0;
+    padding:4rem 1.5rem 2rem;
+    list-style:none;
+    pointer-events:none;
+    background:transparent;
+    flex-wrap:nowrap;
+    white-space:normal;
+  }
+  nav.nav-open .nav-links a{
+    pointer-events:auto;
+    font-family:'Syne',sans-serif;
+    font-size:clamp(1.35rem,4.5vw,1.85rem);
+    font-weight:700;
+    color:var(--text2);
+    text-transform:none;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  nav.nav-open .nav-links a::after{display:none;}
+  nav.nav-open .nav-links a:hover,
+  nav.nav-open .nav-links a.active{color:var(--cyan);}
   .hamburger{display:flex;}
 }
 @media(max-width:600px){
@@ -492,36 +522,29 @@ footer{position:relative;z-index:2;background:var(--bg);border-top:1px solid var
 <!-- Canvas -->
 <canvas id="canvas-bg"></canvas>
 
-<!-- Mobile Menu -->
-<div class="mob-menu" id="mobMenu">
-  <button class="mob-close" onclick="closeMob()">✕</button>
-  <a href="#hero" onclick="closeMob()">Home</a>
-  <a href="#about" onclick="closeMob()">About</a>
-  <a href="#skills" onclick="closeMob()">Skills</a>
-  <a href="#experience" onclick="closeMob()">Experience</a>
-  <a href="#projects" onclick="closeMob()">Projects</a>
-  <a href="#certs" onclick="closeMob()">Certifications</a>
-  <a href="#education" onclick="closeMob()">Education</a>
-  <a href="#contact" onclick="closeMob()">Contact</a>
+<!-- Mobile drawer backdrop (links live in nav — single source, no duplicate labels) -->
+<div class="mob-menu" id="mobMenu" onclick="if(event.target===this)closeMob()" aria-hidden="true">
+  <button type="button" class="mob-close" onclick="closeMob()" aria-label="Close menu">✕</button>
 </div>
 
 <!-- NAV -->
 <nav id="nav">
   <div class="nav-logo">Pradeep<span class="dot">.</span></div>
   <ul class="nav-links">
-    <li><a href="#about">About</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#experience">Experience</a></li>
-    <li><a href="#projects">Projects</a></li>
-    <li><a href="#certs">Certifications</a></li>
-    <li><a href="#education">Education</a></li>
-    <li><a href="#contact">Contact</a></li>
+    <li class="nav-only-mobile"><a href="#hero" onclick="closeMob()">Home</a></li>
+    <li><a href="#about" onclick="closeMob()">About</a></li>
+    <li><a href="#skills" onclick="closeMob()">Skills</a></li>
+    <li><a href="#experience" onclick="closeMob()">Experience</a></li>
+    <li><a href="#projects" onclick="closeMob()">Projects</a></li>
+    <li><a href="#certs" onclick="closeMob()">Certifications</a></li>
+    <li><a href="#education" onclick="closeMob()">Education</a></li>
+    <li><a href="#contact" onclick="closeMob()">Contact</a></li>
   </ul>
   <div class="nav-actions">
-    <button class="nav-dl" onclick="openResume()">⬇ Resume</button>
+    <button type="button" class="nav-dl" onclick="openResume()">⬇ Resume</button>
     <a href="#contact" class="nav-hire">Hire Me</a>
   </div>
-  <button class="hamburger" id="ham" onclick="document.getElementById('mobMenu').classList.add('open')">
+  <button type="button" class="hamburger" id="ham" onclick="openMob()" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
 </nav>
@@ -1435,7 +1458,16 @@ heroObs.observe(document.getElementById('hero'));
 /* ============================================================
    MOBILE MENU
 ============================================================ */
-function closeMob(){ document.getElementById('mobMenu').classList.remove('open'); }
+function openMob(){
+  document.getElementById('mobMenu').classList.add('open');
+  document.getElementById('nav').classList.add('nav-open');
+  document.getElementById('mobMenu').setAttribute('aria-hidden','false');
+}
+function closeMob(){
+  document.getElementById('mobMenu').classList.remove('open');
+  document.getElementById('nav').classList.remove('nav-open');
+  document.getElementById('mobMenu').setAttribute('aria-hidden','true');
+}
 
 /* ============================================================
    CONTACT FORM
@@ -1510,7 +1542,7 @@ document.querySelectorAll('.magnetic').forEach(btn=>{
 const KONAMI=[38,38,40,40,37,39,37,39,66,65];
 let kIdx=0;
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeAdmin();closeResume();}
+  if(e.key==='Escape'){closeMob();closeAdmin();closeResume();}
   if(e.keyCode===KONAMI[kIdx]){
     kIdx++;
     if(kIdx===KONAMI.length){ kIdx=0; openAdmin(); }
