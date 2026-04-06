@@ -83,16 +83,27 @@ body::before{
 nav{
   position:fixed;top:0;left:0;right:0;z-index:200;
   padding:1.1rem 5%;display:flex;align-items:center;justify-content:space-between;
-  transition:background .4s,backdrop-filter .4s,border-color .4s;
+  transition:background .35s,border-color .35s,box-shadow .35s;
   border-bottom:1px solid transparent;
   isolation:isolate;
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
 }
-nav.scrolled{background:rgba(3,7,15,.88);backdrop-filter:blur(24px);border-color:var(--border);}
+/* Solid bar only — no backdrop-filter here (Chromium/WebKit often paints link text twice with blur on fixed headers). */
+nav.scrolled{
+  background:rgba(3,7,15,.94);
+  border-color:var(--border);
+  box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
 .nav-logo{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:var(--white);letter-spacing:-.03em;display:flex;align-items:center;gap:.25rem;}
 .nav-logo .dot{color:var(--cyan);animation:blink 2s infinite;}
 .nav-links{display:flex;flex-wrap:nowrap;gap:clamp(.9rem,1.5vw,2.2rem);align-items:center;white-space:nowrap;}
-.nav-links a{font-size:.78rem;font-weight:500;color:var(--text2);letter-spacing:.09em;text-transform:uppercase;position:relative;transition:color .3s;}
-.nav-links a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:1px;background:var(--cyan);transition:width .3s;}
+.nav-links a{
+  font-size:.78rem;font-weight:600;color:var(--text2);letter-spacing:.12em;
+  text-transform:none;
+  position:relative;transition:color .3s;
+}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--cyan);transition:width .3s;pointer-events:none;}
 .nav-links a:hover,.nav-links a.active{color:var(--cyan);}
 .nav-links a:hover::after,.nav-links a.active::after{width:100%;}
 .nav-actions{display:flex;align-items:center;gap:.8rem;}
@@ -108,7 +119,7 @@ nav.scrolled{background:rgba(3,7,15,.88);backdrop-filter:blur(24px);border-color
 ============================================================ */
 .mob-menu{
   display:none;visibility:hidden;pointer-events:none;position:fixed;inset:0;z-index:199;
-  background:rgba(3,7,15,.97);backdrop-filter:blur(30px);
+  background:rgba(3,7,15,.98);
 }
 .mob-menu.open{display:block;visibility:visible;pointer-events:auto;}
 .mob-close{position:absolute;top:1.5rem;right:1.5rem;z-index:210;background:none;border:none;color:var(--text2);font-size:1.5rem;cursor:pointer;}
@@ -530,15 +541,15 @@ footer{position:relative;z-index:2;background:var(--bg);border-top:1px solid var
 <!-- NAV -->
 <nav id="nav">
   <div class="nav-logo">Pradeep<span class="dot">.</span></div>
-  <ul class="nav-links">
+  <ul class="nav-links" id="mainNavLinks">
     <li class="nav-only-mobile"><a href="#hero" onclick="closeMob()">Home</a></li>
-    <li><a href="#about" onclick="closeMob()">About</a></li>
-    <li><a href="#skills" onclick="closeMob()">Skills</a></li>
-    <li><a href="#experience" onclick="closeMob()">Experience</a></li>
-    <li><a href="#projects" onclick="closeMob()">Projects</a></li>
-    <li><a href="#certs" onclick="closeMob()">Certifications</a></li>
-    <li><a href="#education" onclick="closeMob()">Education</a></li>
-    <li><a href="#contact" onclick="closeMob()">Contact</a></li>
+    <li><a href="#about" onclick="closeMob()">ABOUT</a></li>
+    <li><a href="#skills" onclick="closeMob()">SKILLS</a></li>
+    <li><a href="#experience" onclick="closeMob()">EXPERIENCE</a></li>
+    <li><a href="#projects" onclick="closeMob()">PROJECTS</a></li>
+    <li><a href="#certs" onclick="closeMob()">CERTIFICATIONS</a></li>
+    <li><a href="#education" onclick="closeMob()">EDUCATION</a></li>
+    <li><a href="#contact" onclick="closeMob()">CONTACT</a></li>
   </ul>
   <div class="nav-actions">
     <button type="button" class="nav-dl" onclick="openResume()">⬇ Resume</button>
@@ -1402,7 +1413,7 @@ const navLinks=document.querySelectorAll('.nav-links a');
 const sections=document.querySelectorAll('section[id]');
 
 btt.addEventListener('click',()=>window.scrollTo({top:0,left:0,behavior:'smooth'}));
-window.addEventListener('resize',()=>{ if(innerWidth>960) closeMob(); });
+window.addEventListener('resize',syncNavLayout);
 
 window.addEventListener('scroll',()=>{
   const sy=scrollY;
@@ -1468,6 +1479,11 @@ function closeMob(){
   document.getElementById('nav').classList.remove('nav-open');
   document.getElementById('mobMenu').setAttribute('aria-hidden','true');
 }
+/* Widen past mobile breakpoint: never leave drawer classes on (avoids odd cascade). */
+function syncNavLayout(){
+  if(window.innerWidth>960) closeMob();
+}
+syncNavLayout();
 
 /* ============================================================
    CONTACT FORM
